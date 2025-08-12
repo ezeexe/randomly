@@ -23,6 +23,8 @@
 
       <div class="stats" id="stats">
         Disponibles: <span id="available-count">0</span> · Hechas: <span id="done-count">0</span> · Progreso: <span id="progress-pct">0%</span>
+        <div id="completed-msg" class="completed" hidden>¡Completado!</div>
+        <button id="restart-btn" class="secondary" hidden>Reiniciar</button>
       </div>
 
       <div class="wheel-wrap">
@@ -33,6 +35,7 @@
       <div class="actions">
         <button id="spin-btn">Girar</button>
         <button id="clear-btn" class="secondary">Limpiar datos</button>
+  <button id="discover-btn" class="accent" hidden>Descubre la única opción disponible</button>
       </div>
 
       <div id="result" class="result"></div>
@@ -45,7 +48,13 @@
         <summary>Ver historial de aceptadas</summary>
         <ul id="done-list"></ul>
       </details>
+
+      <details class="history" id="rejects">
+        <summary>Ver rechazos</summary>
+        <ul id="rejects-list"></ul>
+      </details>
     </div>
+  <canvas id="confetti" class="confetti-canvas" hidden></canvas>
     <script type="module" src="main.js"></script>
   </body>
 </html>

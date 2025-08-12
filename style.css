@@ -40,6 +40,11 @@ button {
   cursor: pointer;
   transition: background 0.2s;
 }
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(20%);
+}
 button.secondary {
   background: #e5e7eb;
   color: #1e293b;
@@ -81,6 +86,7 @@ button:active {
    margin-bottom: 0.9rem;
    font-size: 0.95rem;
  }
+.completed { color: #16a34a; font-weight: 600; margin-top: 0.4rem; }
  .decision {
    display: flex;
    gap: 0.7rem;
@@ -104,6 +110,16 @@ button:active {
    list-style: disc;
    padding-left: 1.2rem;
  }
+details#rejects ul { list-style: decimal; }
+
+.confetti-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 50;
+}
 
 .wheel-wrap {
   position: relative;

@@ -5,6 +5,7 @@ const optionInput = document.getElementById('option-input');
 const addForm = document.getElementById('add-form');
 const fileInput = document.getElementById('file-input');
 const fileTrigger = document.getElementById('file-trigger');
+const discoverBtn = document.getElementById('discover-btn');
 const spinBtn = document.getElementById('spin-btn');
 const clearBtn = document.getElementById('clear-btn');
 const resultDiv = document.getElementById('result');
@@ -15,11 +16,15 @@ const availableCount = document.getElementById('available-count');
 const doneCount = document.getElementById('done-count');
 const doneList = document.getElementById('done-list');
 const progressPct = document.getElementById('progress-pct');
+const completedMsg = document.getElementById('completed-msg');
+const restartBtn = document.getElementById('restart-btn');
 const wheelCanvas = document.getElementById('wheel');
 const ctx = wheelCanvas.getContext?.('2d');
+const confettiCanvas = document.getElementById('confetti');
+const confettiCtx = confettiCanvas?.getContext?.('2d');
 
-// Estructura: { available: string[], done: Array<string | {text:string, acceptedAt:string}>, recentRejected: string[] }
-let state = { available: [], done: [], recentRejected: [] };
+// Estructura: { available: string[], done: Array<string | {text:string, acceptedAt:string}>, rejects: Record<string, string[]> }
+let state = { available: [], done: [], rejects: {} };
 let current = null; // opción actualmente mostrada
 
 function normalize(text) {
@@ -32,11 +37,11 @@ function save() {
 
 function load() {
   const saved = localStorage.getItem(STORAGE_KEY);
-  state = saved ? JSON.parse(saved) : { available: [], done: [], recentRejected: [] };
+  state = saved ? JSON.parse(saved) : { available: [], done: [], rejects: {} };
   // asegurar campos por compatibilidad hacia atrás
   if (!Array.isArray(state.available)) state.available = [];
   if (!Array.isArray(state.done)) state.done = [];
-  if (!Array.isArray(state.recentRejected)) state.recentRejected = [];
+  if (!state.rejects || typeof state.rejects !== 'object') state.rejects = {};
   // migrar done de strings a objetos con marca de tiempo opcional
   state.done = state.done.map(d => typeof d === 'string' ? { text: d, acceptedAt: null } : d);
 }
@@ -47,6 +52,16 @@ function updateStats() {
   const total = state.available.length + state.done.length;
   const pct = total ? Math.round((state.done.length / total) * 100) : 0;
   progressPct.textContent = `${pct}%`;
+  // Visibilidad dinámica de UI
+  const completed = pct === 100;
+  // Mostrar/ocultar contenedor de decisión cuando se completó todo
+  decision.style.display = completed ? 'none' : 'flex';
+  completedMsg.hidden = !completed;
+  restartBtn.hidden = !completed;
+  // Botón "Descubre" solo cuando quede 1 disponible
+  discoverBtn.hidden = state.available.length !== 1;
+  // Deshabilitar botón Girar cuando no hay disponibles
+  spinBtn.disabled = state.available.length === 0;
   // render historial
   doneList.innerHTML = '';
   state.done.forEach(item => {
@@ -58,6 +73,8 @@ function updateStats() {
     doneList.appendChild(li);
   });
   drawWheel();
+  if (completed) triggerConfetti();
+  renderRejects();
 }
 
 function addOption(value) {
@@ -74,7 +91,7 @@ function addOption(value) {
 }
 
 function removeAll() {
-  state = { available: [], done: [], recentRejected: [] };
+  state = { available: [], done: [], rejects: {} };
   current = null;
   save();
   updateStats();
@@ -110,6 +127,10 @@ fileInput.addEventListener('change', async () => {
 });
 
 spinBtn.onclick = () => {
+  if (state.available.length === 0) {
+    resultDiv.textContent = 'No hay opciones disponibles. Agrega o importa un .txt.';
+    return;
+  }
   startSpin();
 };
 
@@ -118,8 +139,6 @@ acceptBtn.onclick = () => {
   // mover de available -> done
   state.available = state.available.filter(x => x !== current);
   state.done.push({ text: current, acceptedAt: new Date().toISOString() });
-  // quitar de cooldown si estaba
-  state.recentRejected = state.recentRejected.filter(x => x !== current);
   save();
   updateStats();
   resultDiv.textContent = `Marcado como hecho: ${current}`;
@@ -132,10 +151,18 @@ acceptBtn.onclick = () => {
 rejectBtn.onclick = () => {
   // no mover, simplemente permitir volver a intentar
   if (!current) return;
-  // agregar a cooldown (no repetir por los próximos 3 giros)
-  state.recentRejected = [current, ...state.recentRejected.filter(x => x !== current)].slice(0, 3);
-  save();
+  // Si solo queda una opción, no se puede rechazar
+  if (state.available.length <= 1) {
+    resultDiv.textContent = 'No puedes rechazar la única opción disponible.';
+    rejectBtn.disabled = true;
+    return;
+  }
   resultDiv.textContent = 'Rechazado. Vuelve a girar.';
+  // registrar rechazo
+  const key = current;
+  if (!state.rejects[key]) state.rejects[key] = [];
+  state.rejects[key].push(new Date().toISOString());
+  save();
   current = null;
   decision.hidden = true;
   acceptBtn.disabled = true;
@@ -160,8 +187,7 @@ let lastTimestamp = 0;
 
 function getCandidates() {
   if (state.available.length === 0) return [];
-  const pool = state.available.filter(o => !state.recentRejected.includes(o));
-  return pool.length > 0 ? pool : state.available.slice();
+  return state.available.slice();
 }
 
 function drawWheel() {
@@ -265,7 +291,7 @@ function snapAndSelect() {
   resultDiv.textContent = `${current}`; // sin prefijo
   decision.hidden = false;
   acceptBtn.disabled = false;
-  rejectBtn.disabled = false;
+  rejectBtn.disabled = state.available.length <= 1; // si no hay alternativas, no se puede rechazar
   drawWheel();
 }
 
@@ -330,3 +356,114 @@ updateStats();
 acceptBtn.disabled = true;
 rejectBtn.disabled = true;
 drawWheel();
+
+// Descubrir única opción disponible
+if (discoverBtn) {
+  discoverBtn.addEventListener('click', () => {
+    if (state.available.length === 1) {
+      current = state.available[0];
+      resultDiv.textContent = `${current}`;
+      decision.hidden = false;
+      acceptBtn.disabled = false;
+      rejectBtn.disabled = true; // no se puede rechazar si no hay alternativas
+      drawWheel();
+    }
+  });
+}
+
+// Renderizar rechazos
+function renderRejects() {
+  const list = document.getElementById('rejects-list');
+  if (!list) return;
+  list.innerHTML = '';
+  const entries = Object.entries(state.rejects || {});
+  // ordenar por total de rechazos desc
+  entries.sort((a,b) => (b[1]?.length||0) - (a[1]?.length||0));
+  for (const [text, times] of entries) {
+    const li = document.createElement('li');
+    const count = times.length;
+    const when = times.map(t => new Date(t).toLocaleString()).join(', ');
+    li.textContent = `${text} · rechazos: ${count}${count ? ' · ' + when : ''}`;
+    list.appendChild(li);
+  }
+}
+
+// Reiniciar (limpia todo)
+if (restartBtn) {
+  restartBtn.addEventListener('click', () => {
+    if (confirm('Esto reiniciará todo el progreso. ¿Continuar?')) {
+      removeAll();
+    }
+  });
+}
+
+// ==================== Confeti ====================
+let confettiRunning = false;
+let confettiParticles = [];
+
+function resizeConfettiCanvas() {
+  if (!confettiCanvas) return;
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+}
+resizeConfettiCanvas();
+window.addEventListener('resize', resizeConfettiCanvas);
+
+function spawnConfetti(n = 180) {
+  const colors = ['#22c55e','#3b82f6','#f59e0b','#ef4444','#a855f7','#06b6d4'];
+  confettiParticles = Array.from({ length: n }, () => ({
+    x: Math.random() * confettiCanvas.width,
+    y: -20 - Math.random() * 200,
+    vx: (Math.random() - 0.5) * 4,
+    vy: 2 + Math.random() * 4,
+    size: 4 + Math.random() * 4,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    rot: Math.random() * Math.PI * 2,
+    vr: (Math.random() - 0.5) * 0.3
+  }));
+}
+
+function drawConfetti() {
+  if (!confettiCtx) return;
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  for (const p of confettiParticles) {
+    confettiCtx.save();
+    confettiCtx.translate(p.x, p.y);
+    confettiCtx.rotate(p.rot);
+    confettiCtx.fillStyle = p.color;
+    confettiCtx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+    confettiCtx.restore();
+  }
+}
+
+function stepConfetti() {
+  if (!confettiRunning) return;
+  for (const p of confettiParticles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.02; // gravedad
+    p.rot += p.vr;
+    if (p.y > confettiCanvas.height + 40) {
+      // reciclar arriba
+      p.y = -20;
+      p.x = Math.random() * confettiCanvas.width;
+      p.vy = 2 + Math.random() * 4;
+    }
+  }
+  drawConfetti();
+  requestAnimationFrame(stepConfetti);
+}
+
+function triggerConfetti() {
+  if (!confettiCanvas || confettiRunning) return;
+  confettiCanvas.hidden = false;
+  confettiRunning = true;
+  spawnConfetti();
+  drawConfetti();
+  stepConfetti();
+  // detener tras unos segundos
+  setTimeout(() => {
+    confettiRunning = false;
+    confettiCanvas.hidden = true;
+  }, 5000);
+}
