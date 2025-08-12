@@ -311,7 +311,6 @@ function angleFromEvent(ev) {
 }
 
 function onPointerDown(ev) {
-  ev.preventDefault();
   dragging = true;
   spinning = false; // detener spin actual
   lastTimestamp = 0;
@@ -320,6 +319,8 @@ function onPointerDown(ev) {
 
 function onPointerMove(ev) {
   if (!dragging) return;
+  // mientras se arrastra la rueda, prevenimos el scroll de la página
+  if (ev.cancelable) ev.preventDefault();
   const a = angleFromEvent(ev);
   const newAngle = a - lastDragAngle;
   // estimar velocidad angular basada en movimiento reciente
@@ -384,6 +385,8 @@ function renderRejects() {
     const li = document.createElement('li');
     li.textContent = 'Sin rechazos todavía';
     list.appendChild(li);
+    const cont = document.getElementById('rejects');
+    if (cont) cont.open = false;
     return;
   }
   for (const [text, times] of entries) {
@@ -393,6 +396,8 @@ function renderRejects() {
     li.textContent = `${text} · rechazos: ${count}${count ? ' · ' + when : ''}`;
     list.appendChild(li);
   }
+  const cont = document.getElementById('rejects');
+  if (cont) cont.open = true;
 }
 
 // Reiniciar (limpia todo)
