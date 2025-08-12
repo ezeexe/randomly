@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Randomly icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f1f5f9"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#00000033"/>
+    </filter>
+    <style><![CDATA[
+      .seg { stroke: #ffffff; stroke-width: 2; }
+      .label { font: 28px system-ui, -apple-system, Segoe UI, Roboto, Arial; fill: #334155; }
+    ]]></style>
+  </defs>
+
+  <!-- fondo -->
+  <rect x="0" y="0" width="512" height="512" fill="url(#bg)"/>
+
+  <!-- rueda -->
+  <g transform="translate(256,256)" filter="url(#shadow)">
+    <!-- segmentos (8) -->
+    <!-- i=0, 0°..45° -->
+    <path class="seg" fill="#93c5fd" d="M0,0 L220,0 A220,220 0 0 1 155.56,155.56 Z"/>
+    <!-- i=1, 45°..90° -->
+    <path class="seg" fill="#a7f3d0" d="M0,0 L155.56,155.56 A220,220 0 0 1 0,220 Z"/>
+    <!-- i=2, 90°..135° -->
+    <path class="seg" fill="#fde68a" d="M0,0 L0,220 A220,220 0 0 1 -155.56,155.56 Z"/>
+    <!-- i=3, 135°..180° -->
+    <path class="seg" fill="#fca5a5" d="M0,0 L-155.56,155.56 A220,220 0 0 1 -220,0 Z"/>
+    <!-- i=4, 180°..225° -->
+    <path class="seg" fill="#c7d2fe" d="M0,0 L-220,0 A220,220 0 0 1 -155.56,-155.56 Z"/>
+    <!-- i=5, 225°..270° -->
+    <path class="seg" fill="#f9a8d4" d="M0,0 L-155.56,-155.56 A220,220 0 0 1 0,-220 Z"/>
+    <!-- i=6, 270°..315° -->
+    <path class="seg" fill="#fdba74" d="M0,0 L0,-220 A220,220 0 0 1 155.56,-155.56 Z"/>
+    <!-- i=7, 315°..360° -->
+    <path class="seg" fill="#6ee7b7" d="M0,0 L155.56,-155.56 A220,220 0 0 1 220,0 Z"/>
+
+    <!-- anillo interior -->
+    <circle r="112" fill="#ffffff"/>
+  </g>
+
+  <!-- puntero a la derecha -->
+  <g transform="translate(0,0)" filter="url(#shadow)">
+    <polygon points="496,256 472,244 472,268" fill="#ef4444"/>
+  </g>
+
+  <!-- marca R minimalista -->
+  <g transform="translate(256,256)">
+    <circle r="6" fill="#0ea5e9"/>
+  </g>
+</svg>

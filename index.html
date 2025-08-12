@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="randomly.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Randomly</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+  <h1>Randomly</h1>
+
+      <form id="add-form">
+        <input id="option-input" type="text" placeholder="Agregar opción..." maxlength="80" required />
+        <button type="submit">Agregar</button>
+      </form>
+
+  <div class="upload">
+        <input id="file-input" type="file" accept=".txt" hidden />
+        <button id="file-trigger" type="button" class="accent">Importar desde .txt</button>
+      </div>
+
+      <div class="stats" id="stats">
+        Disponibles: <span id="available-count">0</span> · Hechas: <span id="done-count">0</span> · Progreso: <span id="progress-pct">0%</span>
+      </div>
+
+      <div class="wheel-wrap">
+        <canvas id="wheel" width="380" height="380"></canvas>
+        <div class="pointer" aria-hidden="true"></div>
+      </div>
+
+      <div class="actions">
+        <button id="spin-btn">Girar</button>
+        <button id="clear-btn" class="secondary">Limpiar datos</button>
+      </div>
+
+      <div id="result" class="result"></div>
+      <div class="decision" id="decision" hidden>
+        <button id="accept-btn" class="success">Aceptar</button>
+        <button id="reject-btn" class="warning">Rechazar</button>
+      </div>
+
+      <details class="history" id="history">
+        <summary>Ver historial de aceptadas</summary>
+        <ul id="done-list"></ul>
+      </details>
+    </div>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
