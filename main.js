@@ -163,6 +163,7 @@ rejectBtn.onclick = () => {
   if (!state.rejects[key]) state.rejects[key] = [];
   state.rejects[key].push(new Date().toISOString());
   save();
+  updateStats();
   current = null;
   decision.hidden = true;
   acceptBtn.disabled = true;
@@ -379,6 +380,12 @@ function renderRejects() {
   const entries = Object.entries(state.rejects || {});
   // ordenar por total de rechazos desc
   entries.sort((a,b) => (b[1]?.length||0) - (a[1]?.length||0));
+  if (entries.length === 0) {
+    const li = document.createElement('li');
+    li.textContent = 'Sin rechazos todavía';
+    list.appendChild(li);
+    return;
+  }
   for (const [text, times] of entries) {
     const li = document.createElement('li');
     const count = times.length;
