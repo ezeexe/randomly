@@ -1,4 +1,9 @@
 // main.js
+// Configuración: cambia estos flags a true/false para mostrar/ocultar secciones
+const CONFIG = {
+  showAccepted: false,
+  showRejected: false,
+};
 const STORAGE_KEY = 'ruleta-opciones-v2';
 
 const optionInput = document.getElementById('option-input');
@@ -62,16 +67,21 @@ function updateStats() {
   discoverBtn.hidden = state.available.length !== 1;
   // Deshabilitar botón Girar cuando no hay disponibles
   spinBtn.disabled = state.available.length === 0;
-  // render historial
-  doneList.innerHTML = '';
-  state.done.forEach(item => {
-    const li = document.createElement('li');
-    const text = typeof item === 'string' ? item : item.text;
-    const ts = typeof item === 'string' ? null : item.acceptedAt;
-    const when = ts ? new Date(ts).toLocaleString() : '—';
-    li.textContent = `${text} · ${when}`;
-    doneList.appendChild(li);
-  });
+  // mostrar/ocultar historial de aceptadas según CONFIG
+  const historyDetails = document.getElementById('history');
+  if (historyDetails) historyDetails.hidden = !CONFIG.showAccepted;
+  // render historial solo si es visible
+  if (CONFIG.showAccepted) {
+    doneList.innerHTML = '';
+    state.done.forEach(item => {
+      const li = document.createElement('li');
+      const text = typeof item === 'string' ? item : item.text;
+      const ts = typeof item === 'string' ? null : item.acceptedAt;
+      const when = ts ? new Date(ts).toLocaleString() : '—';
+      li.textContent = `${text} · ${when}`;
+      doneList.appendChild(li);
+    });
+  }
   drawWheel();
   if (completed) triggerConfetti();
   renderRejects();
@@ -377,6 +387,12 @@ if (discoverBtn) {
 function renderRejects() {
   const list = document.getElementById('rejects-list');
   if (!list) return;
+  // mostrar/ocultar según CONFIG
+  const cont = document.getElementById('rejects');
+  if (cont) cont.hidden = !CONFIG.showRejected;
+  if (!CONFIG.showRejected) {
+    return; // no renderizar cuando está oculto
+  }
   list.innerHTML = '';
   const entries = Object.entries(state.rejects || {});
   // ordenar por total de rechazos desc
@@ -385,7 +401,6 @@ function renderRejects() {
     const li = document.createElement('li');
     li.textContent = 'Sin rechazos todavía';
     list.appendChild(li);
-    const cont = document.getElementById('rejects');
     if (cont) cont.open = false;
     return;
   }
@@ -396,7 +411,6 @@ function renderRejects() {
     li.textContent = `${text} · rechazos: ${count}${count ? ' · ' + when : ''}`;
     list.appendChild(li);
   }
-  const cont = document.getElementById('rejects');
   if (cont) cont.open = true;
 }
 
